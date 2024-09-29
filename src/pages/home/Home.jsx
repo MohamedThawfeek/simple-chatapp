@@ -10,7 +10,7 @@ import { setContact, setSelectContact } from "../../redux/slice/contact";
 import { setUser } from "../../redux/slice/user";
 import { useNavigate } from "react-router-dom";
 
-const socket = io(`${process.env.db_url}`);
+const socket = io(`https://simple-chatapp-server.vercel.app`);
 const Home = () => {
   const dispatch = useDispatch();
     const navigate = useNavigate();
