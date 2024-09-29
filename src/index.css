@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.container-box {
+    @apply w-[350px] min-h-[300px] bg-gray-300 rounded-lg shadow-lg shadow-gray-300 flex p-3 items-center flex-col
+}
+
+.title-text {
+    @apply text-[20px] font-semibold
+}
+
+.form {
+    @apply flex p-3 items-center flex-col w-full
+}
+
+.input-container {
+    @apply flex flex-col w-full mt-3 relative
+}
+
+.input {
+    @apply w-full p-2 rounded-lg outline-none border-[1px] border-gray-300
+}
+
+.password-icons {
+    @apply absolute right-3 top-[55%] cursor-pointer
+}
+
+.button {
+    @apply  p-2 rounded-lg w-full mt-6 bg-white
+}
