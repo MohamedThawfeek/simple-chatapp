@@ -8,12 +8,12 @@ import axios from "../../service/axios";
 import toast, { Toaster } from "react-hot-toast";
 import { setContact, setSelectContact } from "../../redux/slice/contact";
 import { setUser } from "../../redux/slice/user";
-import { useNavigation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const socket = io(`${process.env.db_url}`);
 const Home = () => {
   const dispatch = useDispatch();
-    const navigate = useNavigation();
+    const navigate = useNavigate();
   const { contact, selectedContact: SelectContact } = useSelector(
     (state) => state.contact
   );
