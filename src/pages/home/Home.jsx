@@ -12,6 +12,7 @@ import { setUser } from "../../redux/slice/user";
 const socket = io("http://localhost:5000");
 const Home = () => {
   const dispatch = useDispatch();
+    const navigate = useNavigation();
   const { contact, selectedContact: SelectContact } = useSelector(
     (state) => state.contact
   );
