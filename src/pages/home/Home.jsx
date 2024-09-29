@@ -21,6 +21,14 @@ const Home = () => {
 
   const [message, setMessage] = useState("");
 
+    const getToken = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (!getToken) {
+      return navigate("/login");
+    }
+  }, [getToken]);
+
   useEffect(() => {
     const API = async () => {
       try {
@@ -34,7 +42,9 @@ const Home = () => {
           dispatch(setUser(data.data));
         }
       } catch (error) {
+         navigate("/login");
         toast.error(error.message);
+        return 
       }
     };
 
