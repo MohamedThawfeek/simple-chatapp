@@ -7,51 +7,64 @@ import { setMessages } from "../../redux/slice/messages";
 import axios from "../../service/axios";
 import toast, { Toaster } from "react-hot-toast";
 import { setContact, setSelectContact } from "../../redux/slice/contact";
-import { setUser } from "../../redux/slice/user";
+import { setToken, setUser } from "../../redux/slice/user";
 import { useNavigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 
-const socket = io(`https://simple-chatapp-server.vercel.app`);
+// const socket = io(`https://simple-chatapp-server.vercel.app`);
+const socket = io(`http://localhost:5001`);
+
 const Home = () => {
   const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { contact, selectedContact: SelectContact } = useSelector(
     (state) => state.contact
   );
 
   const { messages } = useSelector((state) => state.message);
-  const { user } = useSelector((state) => state.user);
+  const { user, token} = useSelector((state) => state.user);
 
   const [message, setMessage] = useState("");
+  const [loader, setLoader] = useState(false);
+  const Token = localStorage.getItem("token");
 
-    const getToken = localStorage.getItem("token");
+  console.log("Token:", token);
 
   useEffect(() => {
-    if (!getToken) {
-      return navigate("/login");
-    }
-  }, [getToken]);
+    setLoader(true);
+    setTimeout(() => {
+      if (!Token) {
+        return navigate("/login");
+      }
+      setLoader(false);
+
+    }, 2000)
+  }, [token]);
 
   useEffect(() => {
     const API = async () => {
-      try {
-        const { data } = await axios.get("/user", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        if (data.success) {
-          dispatch(setUser(data.data));
+      if(token){
+        try {
+          const { data } = await axios.get("/user", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          if (data.success) {
+            dispatch(setUser(data.data));
+          }
+        } catch (error) {
+          navigate("/login");
+          toast.error(error.response.data.message);
+          return;
         }
-      } catch (error) {
-         navigate("/login");
-        toast.error(error.message);
-        return 
+
       }
     };
 
     API();
-  }, []);
+  }, [token]);
 
   useLayoutEffect(() => {
     socket.on("new message", (msg) => {
@@ -65,34 +78,37 @@ const Home = () => {
 
   useLayoutEffect(() => {
     const API = async () => {
-      try {
-        const { data } = await axios.get("/get-contact", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        if(token){
+          try {
+            const { data } = await axios.get("/get-contact", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+    
+            if (data.success) {
+              dispatch(setContact(data.data));
+            }
+          } catch (error) {
+            toast.error(error.response.data.message);
+          }
 
-        if (data.success) {
-          dispatch(setContact(data.data));
         }
-      } catch (error) {
-        toast.error(error.message);
-      }
     };
 
     API();
-  }, []);
+  }, [token]);
 
   useLayoutEffect(() => {
     const API = async () => {
-      if (SelectContact) {
+      if (SelectContact && token) {
         try {
           const { data } = await axios.post(
             "/get-chat",
             { sender_id: SelectContact?._id },
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${token}`,
               },
             }
           );
@@ -101,12 +117,12 @@ const Home = () => {
             dispatch(setMessages(data.data));
           }
         } catch (error) {
-          toast.error(error.message);
+          toast.error(error.response.data.message);
         }
       }
     };
     API();
-  }, [SelectContact]);
+  }, [SelectContact, token]);
 
   const selectedContact = async (id) => {
     try {
@@ -117,7 +133,7 @@ const Home = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -140,7 +156,7 @@ const Home = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -153,12 +169,17 @@ const Home = () => {
     }
   };
 
-  console.log('SelectContact', SelectContact);
-  
+  console.log("SelectContact", SelectContact);
 
   return (
     <div className="w-screen h-screen flex">
-      <div className="w-[25%] h-full p-3 border-r-[2px] border-gray-300 flex flex-col gap-4">
+      {
+        loader ? <div className="w-full h-full flex items-center justify-center">
+          <ClipLoader size={30} color="#d3d3d3" />
+        </div> : 
+      <>
+      <div className="w-[350px] h-full p-3 border-r-[2px] border-gray-300 flex flex-col gap-2">
+        <div className="h-[12%] flex flex-col gap-4">
         <h1 className="text-[22px] font-bold ">Contacts</h1>
         <input
           type="text"
@@ -167,7 +188,9 @@ const Home = () => {
         />
         <div className="w-full h-[1px] bg-gray-300"></div>
 
-        <div className="w-full h-full overflow-auto">
+        </div>
+
+        <div className="w-full h-[83%] overflow-auto ">
           {contact.map((item, index) => {
             return (
               <div
@@ -187,25 +210,34 @@ const Home = () => {
                 />
                 <div className="ml-[13px] w-full">
                   <div className="flex items-center justify-between w-full">
-                    <h1 className="text-[18px] font-bold">
-                      {item?.email.slice(0, 13)}
+                    <h1 className="text-xs  w-[60%] break-words">
+                      {item?.email}
                     </h1>
-                    <p className="text-gray-600 text-[10px]">
+                    <p className="text-gray-600 text-[10px] w-[40%] text-end">
                       {dayjs(item?.active_time).format("DD/MM/YY hh:mm A")}
                     </p>
                   </div>
                   <div className="flex items-center justify-between w-full">
-                    <p className="text-gray-600">Hello</p>
+                    <p className="text-gray-600 text-xs">Hello</p>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+
+         <div className="h-[5%] flex items-center ">
+          <p onClick={() => {
+            localStorage.removeItem("token");
+            dispatch(setToken(null));
+            navigate("/login");
+          }} className="hover:text-blue-500  cursor-pointer">Logout</p>
+
+        </div>
       </div>
 
       {SelectContact ? (
-        <div className="w-[75%] h-full flex flex-col">
+        <div className=" h-full flex flex-col flex-1">
           <div className="w-full h-[10%] flex items-center px-3">
             <img
               src="https://buffer.com/cdn-cgi/image/w=1000,fit=contain,q=90,f=auto/library/content/images/size/w1200/2023/10/free-images.jpg"
@@ -214,7 +246,9 @@ const Home = () => {
             />
             <div className="ml-[13px] w-full">
               <h1 className="text-[16px] font-bold">{SelectContact?.email}</h1>
-              <p className="text-gray-600 text-[12px]">{dayjs(SelectContact?.active_time).format("DD/MM/YY hh:mm A")}</p>
+              <p className="text-gray-600 text-[12px]">
+                {dayjs(SelectContact?.active_time).format("DD/MM/YY hh:mm A")}
+              </p>
             </div>
           </div>
           <div className="w-full flex justify-end p-3 gap-3 flex-col h-[80%] bg-[url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5J6ukAGV8Tkm0fKmfSOl1wrORDtygCXm5Ktp4VTd46GCqhfvO1Hp7yff687lroEBEHLk&usqp=CAU)] overflow-auto">
@@ -252,9 +286,12 @@ const Home = () => {
             <IoMdSend size={25} onClick={sendMessage} />
           </div>
         </div>
-      ) : <div className="w-[75%] h-full flex items-center justify-center bg-[url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5J6ukAGV8Tkm0fKmfSOl1wrORDtygCXm5Ktp4VTd46GCqhfvO1Hp7yff687lroEBEHLk&usqp=CAU)] ">
-        </div>}
-      <Toaster position="top-right" reverseOrder={false} />
+      ) : (
+        <div className=" flex-1 h-full flex items-center justify-center bg-[url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5J6ukAGV8Tkm0fKmfSOl1wrORDtygCXm5Ktp4VTd46GCqhfvO1Hp7yff687lroEBEHLk&usqp=CAU)] "></div>
+      )}
+      </>
+      }
+      <Toaster position="bottom-center" reverseOrder={false} />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
 import axios from "../../service/axios";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../redux/slice/user";
 
 const Signup = () => {
   const [show, setShow] = useState(false);
@@ -12,6 +14,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [spinner, setSpinner] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,13 +27,13 @@ const Signup = () => {
 
       if (data.success) {
         setSpinner(false);
-        localStorage.setItem("token", data.token);
+        dispatch(setToken(data.token));
         navigate("/");
         return;
       }
     } catch (error) {
       setSpinner(false);
-      toast.error(error.message);
+      toast.error(error.response.data.message);
     }
   };
 

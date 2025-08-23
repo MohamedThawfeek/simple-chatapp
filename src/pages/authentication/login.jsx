@@ -30,7 +30,7 @@ const Login = () => {
       }
     } catch (error) {
       setSpinner(false);
-      toast.error(error.message);
+      toast.error(error.response.data.message);
     }
   };
 
