@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 
 const socket = io(`https://simple-chatapp-server.vercel.app`);
+// const socket = io(`http://localhost:5001`);
 
 const Home = () => {
   const dispatch = useDispatch();
