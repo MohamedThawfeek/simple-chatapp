@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://simple-chatapp-server.vercel.app",
+  baseURL: process.env.REACT_APP_BASE_URL,
   // baseURL: "http://localhost:5001",
 
 });
